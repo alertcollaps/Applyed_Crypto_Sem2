@@ -10,11 +10,13 @@ public class ProtocolMain {
         BigInteger q = BigInteger.probablePrime(4, rnd);
         BigInteger N = p.multiply(q);
         int k = 5;
+        int t = 3;
 
         System.out.println("[ProtocolMain]: N = " + N + " = " + p + " * " + q);
-        System.out.println("[ProtocolMain]: t = " + k);
+        System.out.println("[ProtocolMain]: t = " + t);
+        System.out.println("[ProtocolMain]: k = " + k);
         A claimer = new A(N, k);
-        B verifyer = new B(k, N, claimer);
+        B verifyer = new B(k, t, N, claimer);
         verifyer.startProtocol();
 
         claimer.print();

@@ -1,89 +1,75 @@
-package Protocols.Feige_Fiat_Shamir;
+package Protocols.Guillou_Quisquater;
 
 import java.math.BigInteger;
 import java.util.Random;
 
 public class B {
-    private int k;
     private int t;
     private boolean[] e;
+    
     private A claimer;
     private StringBuffer logs;
     private String name = "[B]:";
-    private BigInteger[] u;
+    private BigInteger u;
     private BigInteger zero = BigInteger.valueOf(0);
     private BigInteger two = BigInteger.valueOf(2);
     private BigInteger N;
+    private BigInteger Ja;
     B(){
-        k = 5;
+        t = 5;
         claimer = new A();
         N = BigInteger.valueOf(493);
         init();
     }
-    B(int k, int t, BigInteger N, A claimer){
-        this.k = k;
+    B(int t, BigInteger N, BigInteger u, A claimer){
+        this.t = t;
         this.claimer = claimer;
         this.N = N;
-        this.t = t;
+        this.u = u;
         
         init();
     }
-    private boolean verify(BigInteger y, BigInteger x, boolean[] e){
+    private boolean verify(BigInteger y, BigInteger x, BigInteger e){
         if (y.equals(zero)){
             return false;
         }
-        BigInteger out = BigInteger.valueOf(1); //y^2 mod N
-        for (int i = 0; i < k; i++){
-            if (e[i]){
-                out = out.multiply(u[i]).mod(N);
-            }
-        }
-        out = y.pow(2).multiply(out).mod(N);
-        return (out.equals(x) || out.equals(x.negate().mod(N))) && !out.equals(zero);
-    }
-    private void generateE(){
-        Random rnd = new Random();
-        e = new boolean[k];
-        for (int i = 0; i < k; i++){
-            e[i] = rnd.nextBoolean();
-        }
-        e[rnd.nextInt(k)] = true; //Гарантирует хотя бы одну единицу
+        BigInteger z = Ja.modPow(e, N).multiply(y.modPow(u, N)).mod(N);
+        return z.equals(x) && !z.equals(zero);
     }
     void init(){
         logs = new StringBuffer();
         
-        generateE();
-
-        u = claimer.registerU(); //Получаем открытый ключ: u = s^2 mod N
-        logs.append(name + " get u: " + u);
+        Ja = claimer.getJa();
+        logs.append(name + " get Ja: " + Ja);
         logs.append('\n');
     }
-    
+    private BigInteger getRandomE(){
+        Random rnd = new Random();
+        BigInteger out;
+        do {
+            out = new BigInteger(N.bitLength(), rnd).mod(N);
+        } while (out.compareTo(BigInteger.valueOf(1)) == -1);
+
+        return out;
+    }
 
     void startProtocol(){
-        
-       
-        
-        
         for (int i = 0; i < t; i++){
-             //Step 1
-            logs.append(name + " Round № " + i);
+            logs.append(name + " round №" + i);
+            //Step 1
             BigInteger x = claimer.transferRSqr();
             logs.append(name + " get x: " + x);
             logs.append('\n');
-            
             //Step 2
-            generateE();
+            BigInteger e = getRandomE();
             BigInteger y = claimer.calcY(e);
             if (!verify(y, x, e)){
-                logs.append(name + " failed verify!");
+                logs.append(name + " failed verify! e: " + e);
                 logs.append(". Exiting...");
                 logs.append('\n');
                 return;
             }
         }
-        
-        
         logs.append(name + "Successful check! End protocol.");
         logs.append('\n');
     }

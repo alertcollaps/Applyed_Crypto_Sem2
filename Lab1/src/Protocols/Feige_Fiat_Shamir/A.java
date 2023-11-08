@@ -99,6 +99,7 @@ public class A {
         for (int i = 0; i < k; i++){
             if (e[i]){
                 out = out.multiply(s[i]).mod(N);
+                //out = out.multiply(s[i]).mod(N).subtract(minusOne); //Error
             }
         }
         out = out.multiply(R).mod(N);
